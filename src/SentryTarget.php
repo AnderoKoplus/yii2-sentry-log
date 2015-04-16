@@ -3,6 +3,7 @@
  * @link http://github.com/opus-online/yii2-sentry-log
  * @copyright Copyright (c) 2015
  * @license http://www.yiiframework.com/license/
+ * @licence https://github.com/opus-online/yii2-sentry-log/blob/master/LICENSE
  */
 
 namespace sentry;
@@ -19,6 +20,7 @@ use yii\log\Target;
  *  [[data]] - data for sending to a sentry
  *
  * @author Dmitry DarkAiR Romanov <darkair@list.ru>
+ * @author Ivo Kund <ivo@opus.ee>
  */
 class SentryTarget extends Target
 {
