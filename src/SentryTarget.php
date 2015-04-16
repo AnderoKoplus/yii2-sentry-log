@@ -1,7 +1,7 @@
 <?php
 /**
- * @link http://github.com/darkair/yii2-sentry-log
- * @copyright Copyright (c) 2014
+ * @link http://github.com/opus-online/yii2-sentry-log
+ * @copyright Copyright (c) 2015
  * @license http://www.yiiframework.com/license/
  */
 
@@ -28,20 +28,25 @@ class SentryTarget extends Target
     public $dsn = '';
 
     /**
-     * @var Raven_Client client for working with sentry
+     * @var array
      */
-    private $client = null;
+    public $clientOptions = [];
+
+    /**
+     * @var \Raven_Client client for working with sentry
+     */
+    private $client;
 
 
     /**
      * Initializes the DbTarget component.
      * This method will initialize the [[db]] property to make sure it refers to a valid DB connection.
-     * @throws InvalidConfigException if [[db]] is invalid.
+     * @throws \yii\base\InvalidConfigException if [[db]] is invalid.
      */
     public function init()
     {
         parent::init();
-        $this->client = new \Raven_Client($this->dsn);
+        $this->client = new \Raven_Client($this->dsn, $this->clientOptions);
     }
 
     /**
@@ -54,7 +59,10 @@ class SentryTarget extends Target
      */
     public function collect($messages, $final)
     {
-        $this->messages = array_merge($this->messages, $this->filterMessages($messages, $this->getLevels(), $this->categories, $this->except));
+        $this->messages = array_merge(
+            $this->messages,
+            $this->filterMessages($messages, $this->getLevels(), $this->categories, $this->except)
+        );
         $count = count($this->messages);
         if ($count > 0 && ($final || $this->exportInterval > 0 && $count >= $this->exportInterval)) {
             $this->export();
@@ -70,29 +78,30 @@ class SentryTarget extends Target
         foreach ($this->messages as $message) {
             list($msg, $level, $catagory, $timestamp, $traces) = $message;
 
-            $errStr = '';
             $options = [
-                'level' => yii\log\Logger::getLevelName($level),
+                'level' => log\Logger::getLevelName($level),
                 'extra' => [],
             ];
             $templateData = null;
             if (is_array($msg)) {
                 $errStr = isset($msg['msg']) ? $msg['msg'] : '';
-                if (isset($msg['data']))
-                    $options['extra'] = $msg['data']; 
+                if (isset($msg['data'])) {
+                    $options['extra'] = $msg['data'];
+                }
             } else {
                 $errStr = $msg;
             }
 
             // Store debug trace in extra data
             $traces = array_map(
-                function($v) {
+                function ($v) {
                     return "{$v['file']}".PHP_EOL."{$v['class']}::{$v['function']} [{$v['line']}]";
                 },
                 $traces
             );
-            if (!empty($traces))
+            if (!empty($traces)) {
                 $options['extra']['traces'] = $traces;
+            }
 
             $this->client->captureMessage(
                 $errStr,
